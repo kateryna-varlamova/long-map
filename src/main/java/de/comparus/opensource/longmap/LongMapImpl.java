@@ -12,6 +12,8 @@ public class LongMapImpl<V> implements LongMap<V> {
      */
     static final int DEFAULT_INITIAL_CAPACITY = 16;
 
+    static final float DEFAULT_INITIAL_LOAD_FACTOR = .75F;
+
     /**
      * A map entry (key-value pair).
      * @param <V> the type of the value
@@ -34,11 +36,16 @@ public class LongMapImpl<V> implements LongMap<V> {
         }
     }
 
-
     /**
      * The table.
      */
     Node<V>[] table;
+
+    float loadFactor;
+
+    int threshold;
+
+    int capacity;
 
     private int size = 0;
 
@@ -47,8 +54,17 @@ public class LongMapImpl<V> implements LongMap<V> {
      */
     public LongMapImpl() {
         // TODO: implement lazy initialization.
-        // TODO: add load factor
-        this.table = (Node<V>[]) new Node[DEFAULT_INITIAL_CAPACITY];
+        this(DEFAULT_INITIAL_CAPACITY, DEFAULT_INITIAL_LOAD_FACTOR);
+    }
+
+    public LongMapImpl(int capacity) {
+        this(capacity, DEFAULT_INITIAL_LOAD_FACTOR);
+    }
+
+    public LongMapImpl(int capacity, float loadFactor) {
+        this.loadFactor = loadFactor;
+        this.capacity = capacity;
+        this.threshold = threshold(capacity);
     }
 
     /**
@@ -60,13 +76,15 @@ public class LongMapImpl<V> implements LongMap<V> {
      */
     @Override
     public V put(long key, V value) {
-        return put(key, value, hash(key));
+        initIfNecessary();
+        if ((size + 1) > threshold) resize();
+        return put(key, value, hash(key), true);
     }
-    private V put(long key, V value, int hash) {
+    private V put(long key, V value, int hash, boolean increaseSize) {
         int pos = position(hash);
         if (table[pos] == null) {
             table[pos] = new Node<>(key, value, hash(key));
-            size++;
+            if (increaseSize) size++;
             return null;
         } else {
             Node<V> parent = null;
@@ -81,7 +99,7 @@ public class LongMapImpl<V> implements LongMap<V> {
                 current = current.next;
             }
             parent.next = new Node<>(key, value, hash(key));
-            size++;
+            if (increaseSize) size++;
         }
         return null;
     }
@@ -89,10 +107,11 @@ public class LongMapImpl<V> implements LongMap<V> {
     /**
      * Gets the value by the specified key
      * @param key the key
-     * @return the value by the specified key
+     * @return the value by the specified key or NULL if there is no value for the key
      */
     @Override
     public V get(long key) {
+        if (table == null) return null;
         int hash = hash(key);
         int pos = position(hash);
         Node<V> current = table[pos];
@@ -112,6 +131,7 @@ public class LongMapImpl<V> implements LongMap<V> {
      */
     @Override
     public V remove(long key) {
+        if (table == null) return null;
         int hash = hash(key);
         int pos = position(hash);
         Node<V> current = table[pos];
@@ -161,6 +181,7 @@ public class LongMapImpl<V> implements LongMap<V> {
      */
     @Override
     public boolean containsValue(V value) {
+        if (table == null) return false;
         for (int i = 0; i < table.length; i++) {
             if (table[i] != null) {
                 Node<V> current = table[i];
@@ -175,10 +196,11 @@ public class LongMapImpl<V> implements LongMap<V> {
 
     /**
      * Returns an array of keys from the map
-     * @return an array of keys from the map
+     * @return an array of keys from the map or NULL if map is empty
      */
     @Override
     public long[] keys() {
+        if (table == null || isEmpty()) return null;
         long[] result = new long[size];
         int counter = 0;
         for (int i = 0; i < table.length; i++) {
@@ -196,10 +218,11 @@ public class LongMapImpl<V> implements LongMap<V> {
 
     /**
      * Returns an array of values from the map
-     * @return an array of values from the map or Null in case if map is empty
+     * @return an array of values from the map or NULL in case if map is empty
      */
     @Override
     public V[] values() {
+        if (table == null) return null;
         if (isEmpty()) return null;
         V anyVal = findAny();
         V[] result = (V[]) Array.newInstance(anyVal.getClass(), size);
@@ -231,9 +254,26 @@ public class LongMapImpl<V> implements LongMap<V> {
      */
     @Override
     public void clear() {
+        if (table == null) return;
         size = 0;
         for (int i = 0; i < table.length; i++) {
             table[i] = null;
+        }
+    }
+
+    private void resize() {
+        Node<V>[] oldTable = table;
+        capacity *= 2;
+        threshold *= 2;
+        table = (Node<V>[]) new Node[capacity];
+        for (int i = 0; i < oldTable.length; i++) {
+            if (oldTable[i] != null) {
+                Node<V> current = oldTable[i];
+                while (current != null) {
+                    put(current.key, current.value, current.hash, false);
+                    current = current.next;
+                }
+            }
         }
     }
 
@@ -263,5 +303,13 @@ public class LongMapImpl<V> implements LongMap<V> {
             }
         }
         return null;
+    }
+
+    private int threshold(int capacity) {
+        return Math.round(capacity * loadFactor);
+    }
+
+    private void initIfNecessary() {
+        if (table == null) this.table = (Node<V>[]) new Node[capacity];
     }
 }

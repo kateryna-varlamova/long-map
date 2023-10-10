@@ -1,7 +1,6 @@
 package de.comparus.opensource.longmap;
 
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -58,11 +57,6 @@ public class LongMapImplTest {
     }
 
     @Test
-    public void testGet_emptyMap() {
-        assertNull(map.get(KEY_2));
-    }
-
-    @Test
     public void testRemoveValue() {
         map.put(KEY_1, VALUE_1);
         String removed = map.remove(KEY_1);
@@ -79,12 +73,6 @@ public class LongMapImplTest {
     }
 
     @Test
-    public void testRemoveValue_emptyMap() {
-        String removed = map.remove(KEY_1);
-        assertNull(removed);
-    }
-
-    @Test
     public void testRemoveValue_collision_first() {
         testRemoveValue_collision(5L, 0L);
     }
@@ -94,7 +82,6 @@ public class LongMapImplTest {
         long count = 5L;
         testRemoveValue_collision(count, count - 1L);
     }
-
 
     @Test
     public void testIsEmpty() {
@@ -128,10 +115,48 @@ public class LongMapImplTest {
     }
 
     @Test
-    @Ignore
-    public void testResizing() {
+    public void testEmptyMap() {
+        LongMap<String> map = new LongMapImpl<>();
+        map.put(KEY_1, VALUE_1);
+        map.clear();
+        assertNull(map.get(KEY_1));
+        assertNull(map.remove(KEY_1));
+        assertFalse(map.containsKey(KEY_1));
+        assertFalse(map.containsValue(VALUE_2));
+        assertNull(map.keys());
+        assertNull(map.values());
+    }
 
-        //TODO: implement
+    @Test
+    public void testNewMap() {
+        LongMap<String> map = new LongMapImpl<>();
+        assertNull(map.get(KEY_1));
+        assertNull(map.remove(KEY_1));
+        assertFalse(map.containsKey(KEY_1));
+        assertFalse(map.containsValue(VALUE_2));
+        assertNull(map.keys());
+        assertNull(map.values());
+    }
+
+    @Test
+    public void testResizing() {
+        LongMapImpl<String> map = new LongMapImpl<>();
+        // The default threshold is 12. To force resizing at least 13 items should be added.
+        int count = 13;
+
+        long[] expectedKeys = new long[count];
+        // put item to init map
+        map.put(0, VALUE_1);
+        expectedKeys[0] = 0;
+        assertEquals(16, map.table.length);
+        for (int i = 1; i < count; i++) {
+            expectedKeys[i] = i;
+            map.put(i, VALUE_1);
+        }
+        assertEquals(32, map.table.length);
+        long[] actualKeys = map.keys();
+        Arrays.sort(actualKeys);
+        assertArrayEquals(expectedKeys, actualKeys);
     }
 
     private LongMap<String> prepareMapCollision(long count) {
