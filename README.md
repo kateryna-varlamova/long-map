@@ -22,5 +22,10 @@ Finish development of class LongMapImpl, which implements a map with keys of typ
 
 Taking into account that requirement was to use as less memory as possible, all operations has O(1) by memory.
 
+The current implementation may be improved. If the linked list is getting to big in case of collision, it may be replaced with a balanced binary search tree. In this case complexity by time of long operations in worst case will be O(logN).
+
+
 To run JaCoCo code coverage report use command:
 `mvn test jacoco:report`
+
+To see the generated report go `target/site/jacoco/index.html` page 
