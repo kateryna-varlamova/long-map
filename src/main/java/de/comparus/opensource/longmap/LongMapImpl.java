@@ -105,6 +105,11 @@ public class LongMapImpl<V> implements LongMap<V> {
         return null;
     }
 
+    /**
+     * Removes the value from the map by specified key if it exists.
+     * @param key the key
+     * @return the value that was removed or NULL in case there was no value for the specified key
+     */
     @Override
     public V remove(long key) {
         int hash = hash(key);
@@ -130,35 +135,65 @@ public class LongMapImpl<V> implements LongMap<V> {
         return null;
     }
 
+    /**
+     * Returns true if the map contains no key-value pairs
+     * @return true if the map contains no key-value pairs
+     */
     @Override
     public boolean isEmpty() {
         return size == 0;
     }
+
+    /**
+     * Returns true if the map contains mapping for this key
+     * @param key the key
+     * @return true if the map contains mapping for this key
+     */
     @Override
     public boolean containsKey(long key) {
         return get(key) != null;
     }
 
+    /**
+     * Returns true if the map contains the specified value
+     * @param value the value
+     * @return true if the map contains the specified value
+     */
     @Override
     public boolean containsValue(V value) {
         return false;
     }
 
+    /**
+     * Returns an array of keys from the map
+     * @return an array of keys from the map
+     */
     @Override
     public long[] keys() {
         return null;
     }
 
+    /**
+     * Returns an array of values from the map
+     * @return an array of values from the map
+     */
     @Override
     public V[] values() {
         return null;
     }
 
+    /**
+     * Returns the number of key-value pairs
+     * @return the number of key-value pairs
+     */
     @Override
     public long size() {
         return size;
     }
 
+    /**
+     * Removes all key-value pairs from the map
+     */
     @Override
     public void clear() {
         size = 0;
