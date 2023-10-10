@@ -3,7 +3,8 @@ package de.comparus.opensource.longmap;
 import java.lang.reflect.Array;
 
 /**
- * Implementation of a hash table with keys of type long
+ * Implementation of a hash table with keys of type long.
+ * Not thread-safe.
  * @param <V> the type of the value
  */
 public class LongMapImpl<V> implements LongMap<V> {
@@ -81,7 +82,9 @@ public class LongMapImpl<V> implements LongMap<V> {
         return put(key, value, hash(key), true);
     }
     private V put(long key, V value, int hash, boolean increaseSize) {
+        // Obtain the right bundle by hash code of the key
         int pos = position(hash);
+        // If the bundle has no key-value pairs, add current key-value pair here
         if (table[pos] == null) {
             table[pos] = new Node<>(key, value, hash(key));
             if (increaseSize) size++;
@@ -89,6 +92,8 @@ public class LongMapImpl<V> implements LongMap<V> {
         } else {
             Node<V> parent = null;
             Node<V> current = table[pos];
+            // If the bundle has key-value pair, check all children.
+            // If mapping for the current key exist, replace its value with the current value.
             while (current != null) {
                 if (current.hash == hash && current.key == key) {
                     V curValue = current.value;
@@ -98,6 +103,7 @@ public class LongMapImpl<V> implements LongMap<V> {
                 parent = current;
                 current = current.next;
             }
+            // If mapping for the current key was not found, add a new one in the tail.
             parent.next = new Node<>(key, value, hash(key));
             if (increaseSize) size++;
         }
@@ -113,14 +119,17 @@ public class LongMapImpl<V> implements LongMap<V> {
     public V get(long key) {
         if (table == null) return null;
         int hash = hash(key);
+        // Obtain the right bundle by hash code of the key
         int pos = position(hash);
         Node<V> current = table[pos];
+        // Check all key-value pairs in this bundle.
         while (current != null) {
             if (current.hash == hash && current.key == key) {
                 return current.value;
             }
             current = current.next;
         }
+        // Return null if nothing was found
         return null;
     }
 
@@ -133,14 +142,18 @@ public class LongMapImpl<V> implements LongMap<V> {
     public V remove(long key) {
         if (table == null) return null;
         int hash = hash(key);
+        // Obtain the right bundle by hash code of the key
         int pos = position(hash);
         Node<V> current = table[pos];
+        // If this bundle has no key-value pairs, return null
         if (current == null) return null;
+        // Check if the key in this bundle is that one we are looking for. If yes, remove it.
         if (current.hash == hash && current.key == key) {
             table[pos] = current.next;
             size--;
             return current.value;
         }
+        // If no, check if this node has any children. If yes, check all of them.
         Node<V> parent = current;
         current = current.next;
         while (current != null) {
@@ -182,8 +195,10 @@ public class LongMapImpl<V> implements LongMap<V> {
     @Override
     public boolean containsValue(V value) {
         if (table == null) return false;
+        // Check every bundle if it has a key-value pair
         for (int i = 0; i < table.length; i++) {
             if (table[i] != null) {
+                // If bundle has a value, then check all possible nodes in this list in case of collision
                 Node<V> current = table[i];
                 while (current != null) {
                     if (current.value.equals(value)) return true;
@@ -203,8 +218,10 @@ public class LongMapImpl<V> implements LongMap<V> {
         if (table == null || isEmpty()) return null;
         long[] result = new long[size];
         int counter = 0;
+        // Check every bundle if it has a key-value pair
         for (int i = 0; i < table.length; i++) {
             if (table[i] != null) {
+                // If bundle has a value, then check all possible nodes in this list in case of collision
                 Node<V> current = table[i];
                 while (current != null) {
                     result[counter] = current.key;
@@ -224,11 +241,15 @@ public class LongMapImpl<V> implements LongMap<V> {
     public V[] values() {
         if (table == null) return null;
         if (isEmpty()) return null;
+        // To find any value to be used to create the result array.
+        // An additional was introduced with purpose to improve performance
         V anyVal = findAny();
         V[] result = (V[]) Array.newInstance(anyVal.getClass(), size);
         int counter = 0;
+        // Check every bundle if it has a key-value pair
         for (int i = 0; i < table.length; i++) {
             if (table[i] != null) {
+                // If bundle has a value, then check all possible nodes in this list in case of collision
                 Node<V> current = table[i];
                 while (current != null) {
                     result[counter] = current.value;
@@ -265,6 +286,8 @@ public class LongMapImpl<V> implements LongMap<V> {
         Node<V>[] oldTable = table;
         capacity *= 2;
         threshold *= 2;
+        // Create new array with bigger length.
+        // Transfer all values from the previous one.
         table = (Node<V>[]) new Node[capacity];
         for (int i = 0; i < oldTable.length; i++) {
             if (oldTable[i] != null) {
