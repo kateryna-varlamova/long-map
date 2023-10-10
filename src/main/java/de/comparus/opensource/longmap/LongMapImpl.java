@@ -1,11 +1,12 @@
 package de.comparus.opensource.longmap;
 
+import java.lang.reflect.Array;
+
 /**
  * Implementation of a hash table with keys of type long
  * @param <V> the type of the value
  */
 public class LongMapImpl<V> implements LongMap<V> {
-
     /**
      * The default initial capacity
      */
@@ -39,7 +40,7 @@ public class LongMapImpl<V> implements LongMap<V> {
      */
     Node<V>[] table;
 
-    private long size = 0;
+    private int size = 0;
 
     /**
      * Ctor.
@@ -59,7 +60,6 @@ public class LongMapImpl<V> implements LongMap<V> {
      */
     @Override
     public V put(long key, V value) {
-        //TODO: create only if needed
         return put(key, value, hash(key));
     }
     private V put(long key, V value, int hash) {
@@ -161,6 +161,15 @@ public class LongMapImpl<V> implements LongMap<V> {
      */
     @Override
     public boolean containsValue(V value) {
+        for (int i = 0; i < table.length; i++) {
+            if (table[i] != null) {
+                Node<V> current = table[i];
+                while (current != null) {
+                    if (current.value.equals(value)) return true;
+                    current = current.next;
+                }
+            }
+        }
         return false;
     }
 
@@ -170,16 +179,42 @@ public class LongMapImpl<V> implements LongMap<V> {
      */
     @Override
     public long[] keys() {
-        return null;
+        long[] result = new long[size];
+        int counter = 0;
+        for (int i = 0; i < table.length; i++) {
+            if (table[i] != null) {
+                Node<V> current = table[i];
+                while (current != null) {
+                    result[counter] = current.key;
+                    current = current.next;
+                    counter++;
+                }
+            }
+        }
+        return result;
     }
 
     /**
      * Returns an array of values from the map
-     * @return an array of values from the map
+     * @return an array of values from the map or Null in case if map is empty
      */
     @Override
     public V[] values() {
-        return null;
+        if (isEmpty()) return null;
+        V anyVal = findAny();
+        V[] result = (V[]) Array.newInstance(anyVal.getClass(), size);
+        int counter = 0;
+        for (int i = 0; i < table.length; i++) {
+            if (table[i] != null) {
+                Node<V> current = table[i];
+                while (current != null) {
+                    result[counter] = current.value;
+                    current = current.next;
+                    counter++;
+                }
+            }
+        }
+        return result;
     }
 
     /**
@@ -218,5 +253,15 @@ public class LongMapImpl<V> implements LongMap<V> {
      */
     private int position(int hash) {
         return hash%(table.length - 1);
+    }
+
+    private V findAny() {
+        for (int i = 0; i < table.length; i++) {
+            Node<V> current = table[i];
+            if (current != null) {
+                return current.value;
+            }
+        }
+        return null;
     }
 }

@@ -4,6 +4,9 @@ import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.Arrays;
+
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -108,21 +111,20 @@ public class LongMapImplTest {
     }
 
     @Test
-    @Ignore
     public void testContainsValue() {
-        //TODO: implement
+        map.put(KEY_1, VALUE_1);
+        assertTrue(map.containsValue(VALUE_1));
+        assertFalse(map.containsValue(VALUE_2));
     }
 
     @Test
-    @Ignore
-    public void testKeys() {
-        //TODO: implement
+    public void testKeysValues() {
+        testKeysValues(map);
     }
 
     @Test
-    @Ignore
-    public void testValues() {
-        //TODO: implement
+    public void testKeysValues_collision() {
+        testKeysValues(new ConstHashLongMapImpl<>());
     }
 
     @Test
@@ -146,5 +148,19 @@ public class LongMapImplTest {
         String removed = map.remove(position);
         assertEquals(VALUE_1, removed);
         assertEquals((count - 1L), map.size());
+    }
+
+    private void testKeysValues(LongMap<String> map) {
+        String[] expectedValues = {"Val1", "Val2", "Val3", "Val4"};
+        long[] expectedKeys = {1L, 23L, 590L, 6734L};
+        for (int i = 0; i < expectedValues.length; i++) {
+            map.put(expectedKeys[i], expectedValues[i]);
+        }
+        String[] actualValues = map.values();
+        Arrays.sort(actualValues);
+        long[] actualKeys = map.keys();
+        Arrays.sort(actualKeys);
+        assertArrayEquals(expectedValues, actualValues);
+        assertArrayEquals(expectedKeys, actualKeys);
     }
 }
