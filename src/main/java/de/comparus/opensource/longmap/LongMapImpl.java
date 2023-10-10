@@ -107,6 +107,26 @@ public class LongMapImpl<V> implements LongMap<V> {
 
     @Override
     public V remove(long key) {
+        int hash = hash(key);
+        int pos = position(hash);
+        Node<V> current = table[pos];
+        if (current == null) return null;
+        if (current.hash == hash && current.key == key) {
+            table[pos] = current.next;
+            size--;
+            return current.value;
+        }
+        Node<V> parent = current;
+        current = current.next;
+        while (current != null) {
+            if (current.hash == hash && current.key == key) {
+                parent.next = current.next;
+                size--;
+                return current.value;
+            }
+            parent = current;
+            current = current.next;
+        }
         return null;
     }
 
@@ -141,7 +161,10 @@ public class LongMapImpl<V> implements LongMap<V> {
 
     @Override
     public void clear() {
-
+        size = 0;
+        for (int i = 0; i < table.length; i++) {
+            table[i] = null;
+        }
     }
 
     /**
